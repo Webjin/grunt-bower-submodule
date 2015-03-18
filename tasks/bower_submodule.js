@@ -18,10 +18,31 @@ module.exports = function(grunt) {
     grunt.registerMultiTask('bower_submodule', 'Installs all dependencies of different bower.json\'s inside a project', function() {
         // Merge task-specific and/or target-specific options with these defaults.
         var options = this.options({
-                targetDir: 'vendor/bower_submodule'
+                targetDir: 'vendor/bower_submodule',
             }),
             taskCompleted = this.async(),
             rootDir = process.cwd();
+
+        var files = [], targetDir;
+        if (this.files.length) {
+            this.files.forEach (function (fileGroup)
+            {
+                targetDir = fileGroup.dest;
+                files.push(fileGroup.src);
+            });
+        }
+        else {
+            targetDir = options.targetDir;
+            files = grunt.file.expand(
+                'bower.json',
+                '**/bower.json',
+                '!**/bower_components/**',
+                '!**/test/**',
+                '!**/tests/**',
+                '!**/build/**',
+                '!**/' + targetDir + '/**'
+            );
+        }
 
         //Use bower.json in the root directory as boilerplate for new bwer file
         var bower_submodule = grunt.file.readJSON('bower.json');
@@ -29,16 +50,7 @@ module.exports = function(grunt) {
         bower_submodule.dependencies = {};
         bower_submodule.devDependencies = {};
 
-        // Find all bowser.json's
-        var files = grunt.file.expand(
-            'bower.json',
-            '**/bower.json',
-            '!**/bower_components/**',
-            '!**/test/**',
-            '!**/tests/**',
-            '!**/build/**',
-            '!**/' + options.targetDir + '/**'
-        );
+
 
         files.forEach(function(path){
             try {
@@ -59,8 +71,8 @@ module.exports = function(grunt) {
         });
 
         //Create target dir
-        grunt.file.mkdir(options.targetDir);
-        process.chdir(options.targetDir); //Do not use grunt.setBase as it will have no impact toe exec command
+        grunt.file.mkdir(targetDir);
+        process.chdir(targetDir); //Do not use grunt.setBase as it will have no impact toe exec command
 
 
         //Create bower json
